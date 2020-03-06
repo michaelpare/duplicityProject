@@ -1,0 +1,18 @@
+#!/bin/sh
+
+test -x $(which duplicity) || exit 0
+. /root/.passphrase
+
+export PASSPHRASE
+export GOOGLE_DRIVE_SETTINGS=/home/champuser/.duplicity/credentials
+# This lets the script find your GPG keys when it is running as root
+export GNUPGHOME=/home/champuser/.gnupg
+
+# Run MySQL dump.  This will create a weekly file, and then update the file every additional time this script is run
+mysqldump -u backup -h localhost -p Ch@mpl@1n!20 --all-databases | gzip -9 > /var/backups/sql/all_$(date "+%Y.%m.%d-%H.%M.%S").sql.zip
+
+# Performs an incremental backup by default.  Since we create a new dump file every week, we have a history
+# of weekly snapshots, and the current week is incrementally updated each day.
+duplicity  /var/backups/sql gdocs://michael.pare@mymail.champlain.edu/duplicity
+
+
